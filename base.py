@@ -9,23 +9,38 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: int = -1
+    username: str
+    email: str
+    createdAt: str = None
+    lastModified: str = None
+
+    @field_validator('createdAt', 'lastModified', mode='before')
+    def convert_datetime(cls, v):
+        if isinstance(v, datetime):
+            return v.isoformat()
+        return v
+
+
 class DiaryCreate(BaseModel):
     userId: int
     date: str
-    rawInput: str = None
+    rawInput: str
     content: str = None
     imgUrl: str = None
 
 
 class DiaryResponse(BaseModel):
-    id: int
+    id: int = -1
     userId: int
     date: str
     rawInput: Optional[str] = None
     content: Optional[str] = None
     imgUrl: Optional[str] = None
-    createdAt: str
-    lastModified: str
+    createdAt: str = None
+    lastModified: str = None
+    isValid: bool = False
 
     @field_validator('date', mode='before')
     def convert_date(cls, v):

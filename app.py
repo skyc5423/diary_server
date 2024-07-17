@@ -1,8 +1,7 @@
-from fastAPIMessage import FastAPIMessage
 from diaryHelper import DiaryHelper
-from database.databaseHelper import SessionLocal
+from database.databaseHelper import SessionLocal, TestSessionLocal
 from database.db_classes import Diary, User
-from base import UserCreate, DiaryCreate, DiaryResponse
+from base import UserCreate, UserResponse, DiaryCreate, DiaryResponse
 from typing import List
 
 from fastapi import FastAPI, Depends, HTTPException
@@ -20,7 +19,15 @@ def get_db():
         db.close()
 
 
-@app.post("/users/", response_model=UserCreate)
+def get_test_db():
+    db = TestSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@app.post("/users/", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(**user.dict())
     db.add(db_user)
@@ -29,13 +36,37 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/diaries/", response_model=DiaryCreate)
-def create_diary(diary: DiaryCreate, db: Session = Depends(get_db)):
-    db_diary = Diary(**diary.dict())
-    db.add(db_diary)
+@app.get("/users/{email}/", response_model=UserResponse)
+def get_user(email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+# remove user by id
+@app.delete("/users/{user_id}/")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="Diary not found")
+    db.delete(db_user)
     db.commit()
-    db.refresh(db_diary)
-    return db_diary
+    return {"detail": "User deleted successfully"}
+
+
+@app.post("/diaries/", response_model=DiaryResponse)
+def create_diary(diary: DiaryCreate, db: Session = Depends(get_db)):
+    generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
+    diary.content = generated_content
+    db_diary = Diary(**diary.dict())
+    if is_valid:
+        db.add(db_diary)
+        db.commit()
+        db.refresh(db_diary)
+    response_diary = DiaryResponse(**db_diary.__dict__)
+    response_diary.isValid = is_valid
+    return response_diary
 
 
 @app.get("/users/{user_id}/diaries/", response_model=List[DiaryResponse])
@@ -57,6 +88,22 @@ def update_diary(diary_id: int, diary: DiaryCreate, db: Session = Depends(get_db
     db_diary = db.query(Diary).filter(Diary.id == diary_id).first()
     if db_diary is None:
         raise HTTPException(status_code=404, detail="Diary not found")
+
+    if db_diary.content != diary.content:
+        setattr(db_diary, 'content', diary.content)
+    elif db_diary.rawInput != diary.rawInput:
+        setattr(db_diary, 'rawInput', diary.rawInput)
+
+    # generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
+    # diary.content = generated_content
+    # db_diary = Diary(**diary.dict())
+    # if is_valid:
+    #     db.add(db_diary)
+    #     db.commit()
+    #     db.refresh(db_diary)
+    # response_diary = DiaryResponse(**db_diary.__dict__)
+    # response_diary.isValid = is_valid
+
     for key, value in diary.dict().items():
         setattr(db_diary, key, value)
     db.commit()
@@ -72,11 +119,6 @@ def delete_diary(diary_id: int, db: Session = Depends(get_db)):
     db.delete(db_diary)
     db.commit()
     return {"detail": "Diary deleted successfully"}
-
-
-@app.post("/generate")
-async def generate_tasks(message: FastAPIMessage):
-    return diary_helper(message)
 
 
 if __name__ == "__main__":

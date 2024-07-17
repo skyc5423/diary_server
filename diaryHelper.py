@@ -1,28 +1,23 @@
 from gpt_helper.gpt_helper import GPTHelper, Message
-from fastAPIMessage import FastAPIMessage
-
+import json
 
 class DiaryHelper:
     def __init__(self):
         self.gpt = GPTHelper(model='gpt-4o-2024-05-13')
 
-    def __call__(self, user_input):
+    def generate_content(self, user_input):
         self._set_user_input(user_input)
-        self.tasks = self._get_tasks()
-        if self.tasks == '':
-            return '오늘 있었던 일을 간략하게 적어주세요 :)'
+        tasks = self._get_tasks()
+        print(tasks)
+        self.tasks = json.loads(tasks)
+        if not self.tasks['has_tasks']:
+            return self.tasks['answer'], False
         self.descriptions = self._generate_diary_descriptions()
 
-        print(f'''
-        user_input: {self.user_input}
-        tasks: {self.tasks}
-        descriptions: {self.descriptions}
-        ''')
+        return self.descriptions, True
 
-        return self.descriptions
-
-    def _set_user_input(self, message: FastAPIMessage):
-        self.user_input = message.content
+    def _set_user_input(self, message):
+        self.user_input = message
 
     def _get_tasks(self):
         assert hasattr(self, 'user_input'), "User input is not set"
