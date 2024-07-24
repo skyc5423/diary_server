@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# MySQL connection details
-MYSQL_USER="your_username"
-MYSQL_PASSWORD="your_password"
-MYSQL_DATABASE="your_database_name"
+# Check if required environment variables are set
+if [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ] || [ -z "$MYSQL_DATABASE" ]; then
+    echo "Error: MYSQL_USER, MYSQL_PASSWORD, and MYSQL_DATABASE environment variables must be set."
+    exit 1
+fi
 
 # SQL commands to create tables
 SQL_COMMANDS=$(cat << EOF
