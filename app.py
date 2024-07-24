@@ -12,7 +12,7 @@ diary_helper = DiaryHelper()
 
 
 def get_db():
-    db = SessionLocal()
+    db = TestSessionLocal()
     try:
         yield db
     finally:
@@ -119,6 +119,28 @@ def delete_diary(diary_id: int, db: Session = Depends(get_db)):
     db.delete(db_diary)
     db.commit()
     return {"detail": "Diary deleted successfully"}
+
+
+@app.post("/test/")
+def create_diary(diary: DiaryCreate, db: Session = Depends(get_db)):
+    # generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
+    generated_content = 'Test Contents'
+    is_valid = True
+    diary.content = generated_content
+    db_diary = Diary(**diary.dict())
+    # if is_valid:
+    #     db.add(db_diary)
+    #     db.commit()
+    #     db.refresh(db_diary)
+    response_diary = DiaryResponse(**db_diary.__dict__)
+    response_diary.isValid = is_valid
+    return response_diary
+
+
+# Ping API
+@app.get("/ping")
+def ping():
+    return {"ping": "pong"}
 
 
 if __name__ == "__main__":
