@@ -3,7 +3,7 @@ import json
 
 class DiaryHelper:
     def __init__(self):
-        self.gpt = GPTHelper(model='gpt-4o-2024-05-13')
+        self.gpt = GPTHelper(model='gpt-4o-mini')
 
     def generate_content(self, user_input):
         self._set_user_input(user_input)
