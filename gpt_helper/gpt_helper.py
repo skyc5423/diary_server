@@ -128,7 +128,8 @@ class GPTHelper:
         'gpt-4-32k': {'input': 0.06, 'output': 0.12},
         'gpt-3.5-turbo-0125': {'input': 0.0005, 'output': 0.0015},
         'gpt-3.5-turbo-instruct': {'input': 0.0015, 'output': 0.002},
-        'gpt-4o-2024-05-13': {'input': 0.005, 'output': 0.005},
+        'gpt-4o-2024-05-13': {'input': 0.005, 'output': 0.015},
+        'gpt-4o-mini': {'input': 0.00015, 'output': 0.0006},
     }
     _API_URL = "https://api.openai.com/v1/chat/completions"
 
