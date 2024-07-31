@@ -31,6 +31,17 @@ class DiaryCreate(BaseModel):
     imgUrl: str = None
 
 
+class RAGQuery(BaseModel):
+    userId: int
+    query: str
+
+
+class RAGResponse(BaseModel):
+    userId: int
+    query: str
+    answer: str = None
+
+
 class DiaryResponse(BaseModel):
     id: int = -1
     userId: int

@@ -1,7 +1,7 @@
 from diaryHelper import DiaryHelper
-from database.databaseHelper import SessionLocal, TestSessionLocal
+from database.databaseHelper import get_db, get_test_db
 from database.db_classes import Diary, User
-from base import UserCreate, UserResponse, DiaryCreate, DiaryResponse
+from base import UserCreate, UserResponse, DiaryCreate, DiaryResponse, RAGQuery, RAGResponse
 from typing import List
 
 from fastapi import FastAPI, Depends, HTTPException
@@ -9,22 +9,6 @@ from sqlalchemy.orm import Session
 
 app = FastAPI()
 diary_helper = DiaryHelper()
-
-
-def get_db():
-    db = TestSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def get_test_db():
-    db = TestSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @app.post("/users/", response_model=UserResponse)
@@ -135,6 +119,14 @@ def create_diary(diary: DiaryCreate, db: Session = Depends(get_db)):
     response_diary = DiaryResponse(**db_diary.__dict__)
     response_diary.isValid = is_valid
     return response_diary
+
+
+@app.post("/rag/", response_model=RAGResponse)
+def execute_rag(rag_query: RAGQuery, db: Session = Depends(get_db)):
+    answer = diary_helper.execute_rag(rag_query.query)
+    response_rag = RAGResponse(**rag_query.__dict__)
+    response_rag.answer = answer
+    return response_rag
 
 
 # Ping API

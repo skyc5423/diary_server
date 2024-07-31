@@ -16,3 +16,19 @@ TestSessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=test_engi
 
 Base.metadata.create_all(bind=engine)
 Base.metadata.create_all(bind=test_engine)
+
+
+def get_db():
+    db = TestSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_test_db():
+    db = TestSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
