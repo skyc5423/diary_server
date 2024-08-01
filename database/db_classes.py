@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, TIMESTAMP, func
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey, TIMESTAMP, func, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -24,7 +24,7 @@ class Diary(Base):
     id = Column(Integer, primary_key=True, index=True)
     userId = Column(Integer, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)
-    rawInput = Column(Text, nullable=True)
+    rawInput = Column(JSON, nullable=False)
     content = Column(Text, nullable=True)
     imgUrl = Column(String(255), nullable=True)
     createdAt = Column(TIMESTAMP, server_default=func.current_timestamp())

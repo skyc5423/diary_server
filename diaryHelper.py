@@ -26,7 +26,7 @@ class DiaryHelper:
         return self.descriptions, True
 
     def _set_user_input(self, message):
-        self.user_input = message
+        self.user_input = message if isinstance(message, str) else '\n'.join(message)
 
     def _get_tasks(self):
         assert hasattr(self, 'user_input'), "User input is not set"

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, field_validator
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime, date
 
 
@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
 class DiaryCreate(BaseModel):
     userId: int
     date: str
-    rawInput: str
+    rawInput: Union[str, List[str]]
     content: str = None
     imgUrl: str = None
 
@@ -46,7 +46,7 @@ class DiaryResponse(BaseModel):
     id: int = -1
     userId: int
     date: str
-    rawInput: Optional[str] = None
+    rawInput: Union[str, List[str]]
     content: Optional[str] = None
     imgUrl: Optional[str] = None
     createdAt: str = None

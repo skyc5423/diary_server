@@ -41,16 +41,33 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 @app.post("/diaries/", response_model=DiaryResponse)
 def create_diary(diary: DiaryCreate, db: Session = Depends(get_db)):
-    generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
-    diary.content = generated_content
-    db_diary = Diary(**diary.dict())
-    if is_valid:
-        db.add(db_diary)
-        db.commit()
-        db.refresh(db_diary)
-    response_diary = DiaryResponse(**db_diary.__dict__)
-    response_diary.isValid = is_valid
-    return response_diary
+    db_diary = db.query(Diary).filter(Diary.userId == diary.userId,
+                                      Diary.date == diary.date).first()
+    if db_diary is None:
+        generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
+        diary.content = generated_content
+        diary.rawInput = [diary.rawInput]
+        db_diary = Diary(**diary.dict())
+        if is_valid:
+            db.add(db_diary)
+            db.commit()
+            db.refresh(db_diary)
+        response_diary = DiaryResponse(**db_diary.__dict__)
+        response_diary.isValid = is_valid
+        return response_diary
+    else:
+        diary.rawInput = db_diary.rawInput + [diary.rawInput]
+        generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
+        diary.content = generated_content
+        db_diary.content = generated_content
+        db_diary.rawInput = diary.rawInput
+        if is_valid:
+            db.commit()
+            db.refresh(db_diary)
+        response_diary = DiaryResponse(**db_diary.__dict__)
+        response_diary.isValid = is_valid
+        return response_diary
+
 
 
 @app.get("/users/{user_id}/diaries/", response_model=List[DiaryResponse])
@@ -77,16 +94,6 @@ def update_diary(diary_id: int, diary: DiaryCreate, db: Session = Depends(get_db
         setattr(db_diary, 'content', diary.content)
     elif db_diary.rawInput != diary.rawInput:
         setattr(db_diary, 'rawInput', diary.rawInput)
-
-    # generated_content, is_valid = diary_helper.generate_content(diary.rawInput)
-    # diary.content = generated_content
-    # db_diary = Diary(**diary.dict())
-    # if is_valid:
-    #     db.add(db_diary)
-    #     db.commit()
-    #     db.refresh(db_diary)
-    # response_diary = DiaryResponse(**db_diary.__dict__)
-    # response_diary.isValid = is_valid
 
     for key, value in diary.dict().items():
         setattr(db_diary, key, value)
